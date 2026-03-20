@@ -75,7 +75,7 @@ app.get('/api/livros/favoritos', (req, res) => {
             res.json(livros[i]);
             contador = true;
         }
-    };
+    }
 
     if (!contador) return res.status(404).json({ erro: "Não há algum livro marcado como favorito" });
 });
@@ -88,6 +88,9 @@ app.post('/api/livros', (req, res) => {
     if (!titulo || !autor || ano === undefined || !genero || nota === undefined) {
         return res.status(400).json({ erro: "Todos os campos são obrigatórios: titulo, autor, ano, genero, nota" });
     }
+
+    if (ano>2026) return res.status(400).json({ erro: "Um livro não pode ter sido publicado nesse ano ainda" });
+    if (nota<0 || nota>5) return res.status(400).json({ erro: "A nota deve estar entre 0 e 5" });
 
     const novoLivro = {
         id: proximoId++,
@@ -113,10 +116,10 @@ app.post('/api/livros/editar/:id', (req, res) => {
 
     const { titulo, autor, ano, genero, nota } = req.body;
 
-    if (titulo !== undefined) livro.titulo = titulo;
-    if (autor !== undefined) livro.autor = autor;
+    if (titulo) livro.titulo = titulo;
+    if (autor) livro.autor = autor;
     if (ano !== undefined) livro.ano = ano;
-    if (genero !== undefined) livro.genero = genero;
+    if (genero) livro.genero = genero;
     if (nota !== undefined) livro.nota = nota;
 
     res.status(201).json(livro);
@@ -130,6 +133,8 @@ app.post('/api/livros/favoritar', (req, res) => {
     const livro = livros.find(p => p.id === parseInt(id));
 
     if(!livro) return res.status(404).json({ erro: "Livro não encontrado" });
+
+    if (livro.fav === true) return res.status(404).json({ erro: "Livro já está favoritado" });
     
     livro.fav = true;
     
@@ -144,6 +149,8 @@ app.post('/api/livros/desfavoritar', (req, res) => {
     const livro = livros.find(p => p.id === parseInt(id));
 
     if(!livro) return res.status(404).json({ erro: "Livro não encontrado" });
+
+    if (!livro.fav) return res.status(404).json({ erro: "Livro já não é favoritado" });
 
     livro.fav = false;
 
